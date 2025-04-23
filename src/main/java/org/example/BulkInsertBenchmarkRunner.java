@@ -3,28 +3,29 @@ package org.example;
 import org.example.entity.UserEntityPermission;
 import org.example.service.UserEntityPermissionBulkInsertStrategy;
 import org.example.util.PermissionDataGenerator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class BulkInsertBenchmarkRunner {
 
     private final List<UserEntityPermissionBulkInsertStrategy> strategies;
     private final JdbcTemplate jdbcTemplate;
+    private final int numberOfRecords;
 
     public BulkInsertBenchmarkRunner(
             List<UserEntityPermissionBulkInsertStrategy> strategies,
-            JdbcTemplate jdbcTemplate) {
+            JdbcTemplate jdbcTemplate,
+            @Value("${benchmark.record.count}") int numerOfRecords) {
         this.strategies = strategies;
         this.jdbcTemplate = jdbcTemplate;
+        this.numberOfRecords = numerOfRecords;
     }
 
-    public Map<String, Long> runBenchmark(int numberOfRecords) {
-        Map<String, Long> results = new LinkedHashMap<>();
+    public void runBenchmark() {
         for (UserEntityPermissionBulkInsertStrategy strategy : strategies) {
             List<UserEntityPermission> permissions = PermissionDataGenerator.generatePermissions(numberOfRecords);
 
@@ -43,10 +44,7 @@ public class BulkInsertBenchmarkRunner {
             System.out.println("Inserted: " + count + " records using " +
                     strategy.getStrategyName() + " in " + duration + " ms");
             System.out.println("--------------------------------------------------");
-            results.put(strategy.getStrategyName(), duration);
         }
-
-        return results;
     }
 
     private void clearTable() {
